@@ -8,11 +8,11 @@ export default class Luhn {
     }
 
     private static checksum = (parsedCreditCard: string): number =>
-        parsedCreditCard
-            .split("")
+        Array.from(parsedCreditCard)
             .reverse()
-            .reduce((checkSum, character, index) => {
-                const digit = parseInt(character);
-                return checkSum + (((index % 2 === 0 || digit === 9) && digit) || (digit * 2) % 9);
-            }, 0);
+            .map(Number)
+            .reduce(
+                (checkSum, digit, index) => checkSum + (((index % 2 === 0 || digit === 9) && digit) || (digit * 2) % 9),
+                0
+            );
 }
