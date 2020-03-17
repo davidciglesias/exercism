@@ -1,5 +1,3 @@
-function isLeapYear( /* Parameters go here */ ) {
-    // Your code here
-}
+const isLeapYear = (year: number) => year % 4 === 0 && (year % 25 !== 0 || year % 400 === 0);
 
-export default isLeapYear
+export default isLeapYear;
