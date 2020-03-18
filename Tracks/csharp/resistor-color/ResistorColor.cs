@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 public static class ResistorColor
 {
@@ -19,10 +19,5 @@ public static class ResistorColor
 
     public static int ColorCode(string color) => colorMapper[color];
 
-    public static string[] Colors()
-    {
-        string[] colors = new string[colorMapper.Count];
-        colorMapper.Keys.CopyTo(colors, 0);
-        return colors;
-    }
+    public static string[] Colors() => colorMapper.Keys.ToArray();
 }
