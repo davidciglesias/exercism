@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 public static class LargestSeriesProduct
@@ -13,14 +12,11 @@ public static class LargestSeriesProduct
         {
             throw new ArgumentException();
         }
-        return digits.Split("")
-                .Select((_, index) => index)
-                .Aggregate(0, (max, current) =>
-                {
-                    int currentSum = digits
-                    .Substring(current, span)
-                    .Aggregate(1, (product, element) => product * int.Parse($"{element}"));
-                    return currentSum > max ? currentSum : max;
-                });
+        return Enumerable.Range(0, length - 1)
+            .Where(index => (index + span - 1) < length)
+            .Aggregate(0, (max, current) =>
+                 Math.Max(digits.Substring(current, span)
+                                .Select(character => int.Parse($"{character}"))
+                                .Aggregate(1, (product, element) => product * element), max));
     }
 }

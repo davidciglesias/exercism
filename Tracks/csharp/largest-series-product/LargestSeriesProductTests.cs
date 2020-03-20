@@ -23,37 +23,37 @@ public class LargestSeriesProductTests
         Assert.Equal(48, LargestSeriesProduct.GetLargestProduct("576802143", 2));
     }
 
-    [Fact(Skip = "Remove to run test")]
+    [Fact]
     public void Can_find_the_largest_product_of_3_with_numbers_in_order()
     {
         Assert.Equal(504, LargestSeriesProduct.GetLargestProduct("0123456789", 3));
     }
 
-    [Fact(Skip = "Remove to run test")]
+    [Fact]
     public void Can_find_the_largest_product_of_3()
     {
         Assert.Equal(270, LargestSeriesProduct.GetLargestProduct("1027839564", 3));
     }
 
-    [Fact(Skip = "Remove to run test")]
+    [Fact]
     public void Can_find_the_largest_product_of_5_with_numbers_in_order()
     {
         Assert.Equal(15120, LargestSeriesProduct.GetLargestProduct("0123456789", 5));
     }
 
-    [Fact(Skip = "Remove to run test")]
+    [Fact]
     public void Can_get_the_largest_product_of_a_big_number()
     {
         Assert.Equal(23520, LargestSeriesProduct.GetLargestProduct("73167176531330624919225119674426574742355349194934", 6));
     }
 
-    [Fact(Skip = "Remove to run test")]
+    [Fact]
     public void Reports_zero_if_the_only_digits_are_zero()
     {
         Assert.Equal(0, LargestSeriesProduct.GetLargestProduct("0000", 2));
     }
 
-    [Fact(Skip = "Remove to run test")]
+    [Fact]
     public void Reports_zero_if_all_spans_include_zero()
     {
         Assert.Equal(0, LargestSeriesProduct.GetLargestProduct("99099", 3));
@@ -65,13 +65,13 @@ public class LargestSeriesProductTests
         Assert.Throws<ArgumentException>(() => LargestSeriesProduct.GetLargestProduct("123", 4));
     }
 
-    [Fact(Skip = "Remove to run test")]
+    [Fact]
     public void Reports_1_for_empty_string_and_empty_product_0_span_()
     {
         Assert.Equal(1, LargestSeriesProduct.GetLargestProduct("", 0));
     }
 
-    [Fact(Skip = "Remove to run test")]
+    [Fact]
     public void Reports_1_for_nonempty_string_and_empty_product_0_span_()
     {
         Assert.Equal(1, LargestSeriesProduct.GetLargestProduct("123", 0));
