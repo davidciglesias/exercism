@@ -9,19 +9,15 @@ public interface INameGenerator
 
 public abstract class ANameGenerator : INameGenerator
 {
-    protected static readonly Dictionary<CharacterType, (char, char)> mapCharacterTypeToBounds = new Dictionary<CharacterType, (char, char)>
-    {
-        [CharacterType.Character] = ('A', 'Z'),
-        [CharacterType.Digit] = ('0', '9'),
-    };
+    protected readonly Func<CharacterType, (char, char)> charMapping;
 
     protected readonly List<CharacterType> namePattern;
-    public ANameGenerator(List<CharacterType> namePattern) =>
-        this.namePattern = new List<CharacterType>(namePattern);
+    public ANameGenerator(List<CharacterType> namePattern, Func<CharacterType, (char, char)> charMapping) => 
+        (this.namePattern, this.charMapping) = (namePattern.ToList(), charMapping);
 
     private char GenerateCharacter((char lower, char upper) pair) => (char)new Random().Next(pair.lower, pair.upper + 1);
 
-    protected char GenerateCharacter(CharacterType type) => GenerateCharacter(mapCharacterTypeToBounds[type]);
+    protected char GenerateCharacter(CharacterType type) => GenerateCharacter(charMapping(type));
 
     public abstract string GenerateName();
 }
@@ -30,24 +26,30 @@ public class NameGenerator : ANameGenerator
 {
     private readonly int maxNames;
 
-    public NameGenerator(List<CharacterType> namePattern) : base(namePattern)
+    private static (char lower, char upper) UpperCaseMapping(CharacterType type) => type switch
     {
-        Dictionary<CharacterType, int> mapCharacterTypeToCount = mapCharacterTypeToBounds
-            .ToDictionary((keyPair) => keyPair.Key, (keyPair) => keyPair.Value.Item2 - keyPair.Value.Item1 + 1);
-        maxNames = namePattern.Aggregate(1, (product, charType) => product *= mapCharacterTypeToCount[charType]);
+        CharacterType.Character => ('A', 'Z'),
+        CharacterType.Digit => ('0', '9'),
+        _ => throw new InvalidOperationException(),
+    };
+
+
+    public NameGenerator(List<CharacterType> namePattern) : base(namePattern, UpperCaseMapping)
+    {
+        static int CharMapSize((char lower, char upper) map) => 1 + map.upper - map.lower;
+        maxNames = namePattern.Aggregate(1, (product, charType) => product *= CharMapSize(UpperCaseMapping(charType)));
     }
 
     private static readonly HashSet<string> previousNames = new HashSet<string>();
 
     public override string GenerateName()
     {
-        string newName;
         if (previousNames.Count == maxNames) throw new Exception("Sorry we ran out of names!");
+        string newName;
         do
         {
-            newName = string.Join("", namePattern.Select(charType => GenerateCharacter(charType)));
-        } while (previousNames.Contains(newName));
-        previousNames.Add(newName);
+            newName = string.Concat(namePattern.Select(GenerateCharacter));
+        } while (!previousNames.Add(newName));
         return newName;
     }
 }
