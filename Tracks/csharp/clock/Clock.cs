@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 
 public class Clock : IEquatable<Clock>
 {
-    public bool Equals([AllowNull] Clock other) => hours == other.hours && minutes == other.minutes;
+    public bool Equals([AllowNull] Clock other) => (hours, minutes) == (other.hours, other.minutes);
 
     private readonly int hours;
     private readonly int minutes;
@@ -28,7 +28,7 @@ public class Clock : IEquatable<Clock>
     public Clock Add(int minutesToAdd) => new Clock(hours, minutes + minutesToAdd);
 
 
-    public Clock Subtract(int minutesToSubtract) => Add(-1 * minutesToSubtract);
+    public Clock Subtract(int minutesToSubtract) => Add(-minutesToSubtract);
 
     public override string ToString() => $"{hours:D2}:{minutes:D2}";
 }
