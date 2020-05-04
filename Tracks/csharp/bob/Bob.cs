@@ -3,12 +3,24 @@ using System.Text.RegularExpressions;
 
 public static class Bob
 {
-    private static bool IsYelling(string statement) => new Regex("[A-Z]").IsMatch(statement) && statement == statement.ToUpper();
+    private static bool IsYelling(this string statement) => new Regex("[A-Z]").IsMatch(statement) && statement == statement.ToUpper();
 
-    public static string Response(string statement) =>
-        string.IsNullOrWhiteSpace(statement)
-            ? "Fine. Be that way!"
-            : statement.TrimEnd().Last() == '?'
-            ? IsYelling(statement) ? "Calm down, I know what I'm doing!" : "Sure."
-            : IsYelling(statement) ? "Whoa, chill out!" : "Whatever.";
+    private static bool IsSilent(this string statement) => string.IsNullOrWhiteSpace(statement);
+
+    private static bool IsQuestion(this string statement) => statement.TrimEnd().Last() == '?';
+
+    public static string Response(string statement)
+    {
+        if(statement.IsSilent())
+        {
+            return "Fine. Be that way!";
+        }
+
+        if(statement.IsQuestion())
+        {
+            return statement.IsYelling() ? "Calm down, I know what I'm doing!" : "Sure.";
+        }
+
+        return statement.IsYelling() ? "Whoa, chill out!" : "Whatever.";
+    }
 }

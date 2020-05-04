@@ -5,165 +5,100 @@ using System.Linq;
 
 public class LedgerEntry
 {
-   public LedgerEntry(DateTime date, string desc, decimal chg)
-   {
-       Date = date;
-       Desc = desc;
-       Chg = chg;
-   }
+    public LedgerEntry(DateTime date, string description, decimal change)
+    {
+        Date = date;
+        Description = description;
+        Change = change;
+    }
 
-   public DateTime Date { get; }
-   public string Desc { get; }
-   public decimal Chg { get; }
+    public DateTime Date { get; }
+    public string Description { get; }
+    public decimal Change { get; }
+}
+
+public class Culture
+{
+    public readonly int NegativePattern;
+    public readonly string ShortDatePattern;
+    public readonly string DateSeparator;
+    public readonly string Header;
+
+    public Culture(int negativePattern, string datePattern, string dateSeparator, string header)
+    {
+        NegativePattern = negativePattern;
+        ShortDatePattern = datePattern;
+        DateSeparator = dateSeparator;
+        Header = header;
+    }
 }
 
 public static class Ledger
 {
-   public static LedgerEntry CreateEntry(string date, string desc, int chng)
-   {
-       return new LedgerEntry(DateTime.Parse(date, CultureInfo.InvariantCulture), desc, chng / 100.0m);
-   }
+    private const string SEPARATOR = " | ";
 
-   private static CultureInfo CreateCulture(string cur, string loc)
-   {
-       string curSymb = null;
-       int curNeg = 0;
-       string datPat = null;
+    private static readonly Dictionary<string, Culture> supportedCultures = new Dictionary<string, Culture>
+    {
+        {  "nl-NL", new Culture(12, "dd/MM/yyyy", "-", "Datum      | Omschrijving              | Verandering  ") },
+        { "en-US", new Culture(0, "MM/dd/yyyy", "/", "Date       | Description               | Change       ") }
+    };
 
-       if (cur != "USD" && cur != "EUR")
-       {
-           throw new ArgumentException("Invalid currency");
-       }
-       else
-       {
-           if (loc != "nl-NL" && loc != "en-US")
-           {
-               throw new ArgumentException("Invalid currency");
-           }
+    private enum Currency
+    {
+        USD = '$',
+        EUR = '€',
+    }
 
-           if (cur == "USD")
-           {
-               if (loc == "en-US")
-               {
-                   curSymb = "$";
-                   datPat = "MM/dd/yyyy";
-               }
-               else if (loc == "nl-NL")
-               {
-                   curSymb = "$";
-                   curNeg = 12;
-                   datPat = "dd/MM/yyyy";
-               }
-           }
+    public static LedgerEntry CreateEntry(string date, string locale, int change) =>
+        new LedgerEntry(DateTime.Parse(date, CultureInfo.InvariantCulture), locale, change / 100.0m);
 
-           if (cur == "EUR")
-           {
-               if (loc == "en-US")
-               {
-                   curSymb = "€";
-                   datPat = "MM/dd/yyyy";
-               }
-               else if (loc == "nl-NL")
-               {
-                   curSymb = "€";
-                   curNeg = 12;
-                   datPat = "dd/MM/yyyy";
-               }
-           }
-       }
+    private static CultureInfo CreateCulture(string cur, string locale)
+    {
+        if (!Enum.GetNames(typeof(Currency)).Contains(cur))
+        {
+            throw new ArgumentException("Invalid currency");
+        }
 
-       var culture = new CultureInfo(loc);
-       culture.NumberFormat.CurrencySymbol = curSymb;
-       culture.NumberFormat.CurrencyNegativePattern = curNeg;
-       culture.DateTimeFormat.ShortDatePattern = datPat;
-       return culture;
-   }
+        if (!supportedCultures.ContainsKey(locale))
+        {
+            throw new ArgumentException("Invalid culture locale");
+        }
 
-   private static string PrintHead(string loc)
-   {
-       if (loc == "en-US")
-       {
-           return "Date       | Description               | Change       ";
-       }
+        var culture = new CultureInfo(locale);
+        Culture currentCulture = supportedCultures[locale];
+        culture.NumberFormat.CurrencySymbol = ((char)(Currency)Enum.Parse(typeof(Currency), cur)).ToString();
+        culture.NumberFormat.CurrencyNegativePattern = currentCulture.NegativePattern;
+        culture.DateTimeFormat.ShortDatePattern = currentCulture.ShortDatePattern;
+        culture.DateTimeFormat.DateSeparator = currentCulture.DateSeparator;
+        return culture;
+    }
 
-       else
-       {
-           if (loc == "nl-NL")
-           {
-               return "Datum      | Omschrijving              | Verandering  ";
-           }
-           else
-           {
-               throw new ArgumentException("Invalid locale");
-           }
-       }
-   }
+    private static string PrintHead(string locale) => 
+        supportedCultures.TryGetValue(locale, out Culture head) ? head.Header : throw new ArgumentException("Invalid culture locale.");
 
-   private static string Date(IFormatProvider culture, DateTime date) => date.ToString("d", culture);
+    private static string Date(IFormatProvider culture, DateTime date) => date.ToString("d", culture);
 
-   private static string Description(string desc)
-   {
-       if (desc.Length > 25)
-       {
-           var trunc = desc.Substring(0, 22);
-           trunc += "...";
-           return trunc;
-       }
+    private static string Description(string desc) => string.Format("{0,-25}", desc.Length > 25 ? desc.Substring(0, 22) + "..." : desc);
 
-       return desc;
-   }
+    private static string Change(IFormatProvider culture, decimal change) =>
+        string.Format("{0,13}", $"{change.ToString("C", culture)}{(change < 0.0m ? "" : " ")}");
 
-   private static string Change(IFormatProvider culture, decimal cgh)
-   {
-       return cgh < 0.0m ? cgh.ToString("C", culture) : cgh.ToString("C", culture) + " ";
-   }
+    private static string PrintEntry(IFormatProvider culture, LedgerEntry entry)
+    {
+        string date = Date(culture, entry.Date);
+        string description = Description(entry.Description);
+        string change = Change(culture, entry.Change);
 
-   private static string PrintEntry(IFormatProvider culture, LedgerEntry entry)
-   {
-       var formatted = "";
-       var date = Date(culture, entry.Date);
-       var description = Description(entry.Desc);
-       var change = Change(culture, entry.Chg);
+        return $"{date}{SEPARATOR}{description}{SEPARATOR}{change}";
+    }
 
-       formatted += date;
-       formatted += " | ";
-       formatted += string.Format("{0,-25}", description);
-       formatted += " | ";
-       formatted += string.Format("{0,13}", change);
+    private static IEnumerable<LedgerEntry> SortByChangeAndText(LedgerEntry[] entries) => 
+        entries.OrderBy(x => x.Change).ThenBy(x => x.Date + "@" + x.Description + "@" + x.Change);
 
-       return formatted;
-   }
+    public static string Format(string currency, string locale, LedgerEntry[] entries)
+    {
+        var culture = CreateCulture(currency, locale);
 
-
-   private static IEnumerable<LedgerEntry> sort(LedgerEntry[] entries)
-   {
-       var neg = entries.Where(e => e.Chg < 0).OrderBy(x => x.Date + "@" + x.Desc + "@" + x.Chg);
-       var post = entries.Where(e => e.Chg >= 0).OrderBy(x => x.Date + "@" + x.Desc + "@" + x.Chg);
-
-       var result = new List<LedgerEntry>();
-       result.AddRange(neg);
-       result.AddRange(post);
-
-       return result;
-   }
-
-   public static string Format(string currency, string locale, LedgerEntry[] entries)
-   {
-       var formatted = "";
-       formatted += PrintHead(locale);
-
-       var culture = CreateCulture(currency, locale);
-
-       if (entries.Length > 0)
-       {
-           var entriesForOutput = sort(entries);
-
-           for (var i = 0; i < entriesForOutput.Count(); i++)
-           {
-               formatted += "\n" + PrintEntry(culture, entriesForOutput.Skip(i).First());
-           }
-       }
-
-       return formatted;
-   }
+        return SortByChangeAndText(entries).Aggregate(PrintHead(locale), (result, entry) => result + $"\n{PrintEntry(culture, entry)}");
+    }
 }

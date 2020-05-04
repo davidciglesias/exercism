@@ -5,7 +5,7 @@ public class SimpleCipher
 {
     private const int Module = 'z' - 'a' + 1;
 
-    public SimpleCipher() => Key = string.Join("", Enumerable.Range(1, 100).Select(_ => (char)new Random().Next('a', 'z')));
+    public SimpleCipher() => Key = string.Join("", Enumerable.Range(1, 100).Select(_ => (char)new Random().Next('a', 'z' + 1)));
 
     public SimpleCipher(string key) => Key = key;
 
