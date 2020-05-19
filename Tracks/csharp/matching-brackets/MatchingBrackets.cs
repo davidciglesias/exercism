@@ -12,7 +12,7 @@ public static class MatchingBrackets
 
     public static bool IsPaired(string input)
     {
-        var bracketsPendingClosure = new List<char>();
+        var bracketStack = new Stack<char>();
 
         bool isMismatch = false;
 
@@ -22,23 +22,15 @@ public static class MatchingBrackets
             {
                 if (openCloseMap.ContainsKey(character))
                 {
-                    bracketsPendingClosure.Add(openCloseMap[character]);
+                    bracketStack.Push(openCloseMap[character]);
                 }
-                else if (openCloseMap.ContainsValue(character))
+                else if (openCloseMap.ContainsValue(character) && (!bracketStack.TryPop(out char last2) || last2 != character))
                 {
-                    var last = bracketsPendingClosure.LastOrDefault();
-                    if (last == default || last != character)
-                    {
-                        isMismatch = true;
-                    }
-                    else
-                    {
-                        bracketsPendingClosure.RemoveAt(bracketsPendingClosure.Count - 1);
-                    }
+                    isMismatch = true;
                 }
             }
         });
 
-        return !isMismatch && bracketsPendingClosure.Count == 0;
+        return !isMismatch && bracketStack.Count == 0; 
     }
 }
